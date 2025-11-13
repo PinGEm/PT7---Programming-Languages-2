@@ -4,6 +4,12 @@
 #include <ctime>
 #include <limits>
 
+#define XOR_LOGICGATE_NN 1
+#define BINARY_DECIMAL 2
+#define ODD_OR_EVEN_CLASSIFIER 3
+#define LINEAR_EQUATION_SOLVER 4
+
+
 using std::cout;
 using std::cin;
 
@@ -86,7 +92,6 @@ class NeuralNetwork {
 			for (int i = 0; i < num_layers; ++i) {
 				layers[i] = new Layer(topology[i + 1], topology[i]);
 			}
-			srand(time(0));
 		}
 
 		~NeuralNetwork() {
@@ -162,15 +167,12 @@ class NeuralNetwork {
 
 			delete[] outputs;
 		}
-
-		void clearData() {
-			// Optional: Reset outputs/deltas if needed
-		}
 };
 
 int validateInput(int low, int high);
 
 int main() {
+	srand(time(NULL));
     cout << "*****************************************************\n";
     cout << "==== STARTING NEURAL NETWORK APPLICATION PROGRAM ====\n";
     cout << "*****************************************************\n";
@@ -182,9 +184,8 @@ int main() {
     cout << "Type '1' for XOR Logic Gate Neural Network\n";
     cout << "Type '2' for Binary -> Decimal Converter\n";
     cout << "Type '3' for Odd or Even Number Classifier\n";
-    cout << "Type '4' for Prime Number Detector\n";
-    cout << "Type '5' for Linear Equation Solver\n";
-    cout << "Type '6' to Exit Program\n";
+    cout << "Type '4' for Linear Equation Solver\n";
+    cout << "Type '5' to Exit Program\n";
 
     int *topology = nullptr;
     NeuralNetwork *nn = nullptr;
@@ -224,6 +225,28 @@ int main() {
 	double input_set_BD[1][4];
 	
 	
+	// ODD-OR-EVEN SPECIFIC (turned into binary)
+	double training_inputs_OE[50][17] = {};
+	
+	for (int i = 0; i < 50; ++i) {
+		int num = i;
+        for (int b = 0; b < 17; ++b) {
+            // Fill bits MSB first
+            training_inputs_OE[i][17 - 1 - b] = (num >> b) & 1;
+        }
+	}
+
+	double expected_outputs_OE[50][1] = {
+		{0}, {1}, {0}, {1}, {0}, {1}, {0}, {1}, {0}, {1},
+		{0}, {1}, {0}, {1}, {0}, {1}, {0}, {1}, {0}, {1},
+		{0}, {1}, {0}, {1}, {0}, {1}, {0}, {1}, {0}, {1},
+		{0}, {1}, {0}, {1}, {0}, {1}, {0}, {1}, {0}, {1},
+		{0}, {1}, {0}, {1}, {0}, {1}, {0}, {1}, {0}, {1}
+	};
+
+	double input_set_OE[1][17];
+	int tempNum;
+	
 	// ------------------ MAIN APPLICATION LOOP ------------------ //
     do {
         cout << "Input: ";
@@ -234,7 +257,7 @@ int main() {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         switch (input) {
-        case 1: // XOR Logic Gate Neural Network
+        case XOR_LOGICGATE_NN:
 			// Setup Variables: Layers
 			topology = new int[3];
 			topology[0] = 2; topology[1] = 2; topology[2] = 1;
@@ -261,7 +284,7 @@ int main() {
 			output = nn->predict(input_set_XOR[0],2);
 			cout << "XOR Result: " << output[0] << "\n";
             break;
-        case 2: // BINARY-DECIMAL-CONVERTER
+        case BINARY_DECIMAL: // BINARY-DECIMAL-CONVERTER
 			// Setup Variables: Layers
 			topology = new int[3];
 			topology[0] = 4; topology[1] = 8; topology[2] = 1;
@@ -269,7 +292,7 @@ int main() {
 			
 			// Adjusting weights to be accurate
 			for(int epoch = 0; epoch < 30000; ++epoch){
-				for(int i = 0; i < 16; ++i)
+				for(int i = 0; i < 17; ++i)
 				{
 					nn->train(training_inputs_BD[i], expected_outputs_BD[i], 4);
 				}
@@ -285,7 +308,7 @@ int main() {
 			cout << "FOURTH VALUE: \n";
 			input_data_four = validateInput(0,1);
 			
-			// make sure to round up btw c:
+			// make sure to round up btw c: *************
 			input_set_BD[0][0] = input_data_one;
 			input_set_BD[0][1] = input_data_two;
 			input_set_BD[0][2] = input_data_three;
@@ -297,13 +320,49 @@ int main() {
 			cout << "Result: " << output[0] << "\n";
 			cout << "Decimal Result: " << (int)round((output[0] * 15)) << "\n";
             break;
-        case 3:
+        case ODD_OR_EVEN_CLASSIFIER:
+			// Setup Variables: Layers
+			topology = new int[3];
+			topology[0] = 17; topology[1] = 8; topology[2] = 1;
+			nn = new NeuralNetwork(topology,3);
+						
+			// Adjusting weights to be accurate
+			for(int epoch = 0; epoch < 10000; ++epoch){
+				for(int i = 0; i < 50; ++i)
+				{
+					nn->train(training_inputs_OE[i], expected_outputs_OE[i], 17);
+				}
+			}
+			
+			// Asking for User Input
+			cout << "NUMBER (0-100,000): \n";
+			input_data_one = abs(validateInput(-100000,100000));
+			input_set_OE[0][0] = input_data_one;
+			
+			
+			// Turning number into a binary
+			tempNum = input_data_one;
+			for (int b = 0; b < 17; ++b) {
+				input_set_OE[0][17 - 1 - b] = (tempNum >> b) & 1;
+			}
+			
+			// Predict Results
+			output = nn->predict(input_set_OE[0], 17);
+			cout << "Result: " << output[0] << "\n";
+			cout << "Binary (INPUT DATA): ";
+			
+			for(int i = 0; i < 17; i++)
+			{
+				cout << input_set_OE[0][i];
+			}
+			
+			cout << "\n";
+			
+			(output[0] > 0.5) ? cout << "Number is ODD" : cout << "Number is EVEN";
             break;
-        case 4:
+        case LINEAR_EQUATION_SOLVER:
             break;
         case 5:
-            break;
-        case 6:
             running = false;
             break;
         default:
