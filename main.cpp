@@ -431,7 +431,7 @@ int main() {
 			nn = new NeuralNetwork(topology,3);
 						
 			// Adjusting weights to be accurate
-			for(int epoch = 0; epoch < 10000; ++epoch){
+			for(int epoch = 0; epoch < 1000; ++epoch){
 				for(int i = 0; i < 50; ++i)
 				{
 					nn->train(training_inputs_OE[i], expected_outputs_OE[i], 17);
