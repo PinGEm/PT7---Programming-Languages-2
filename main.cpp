@@ -199,7 +199,7 @@ class NeuralNetwork {
 					}
 				}
 				
-				// 
+				 
 				for (int n = 0; n < layer->num_neurons; ++n) {
 					// adjust the weights and bias of each neuron now that we have computed the delta.
 					Neuron* neuron = layer->neurons[n];
@@ -425,7 +425,7 @@ int main() {
 			cout << "Decimal Result: " << (int)round((output[0] * 15)) << "\n";
             break;
         case ODD_OR_EVEN_CLASSIFIER:
-			// Setup Variables: Layers
+			// Setup Variables: Layers	
 			topology = new int[3];
 			topology[0] = 17; topology[1] = 8; topology[2] = 1;
 			nn = new NeuralNetwork(topology,3);
@@ -509,12 +509,15 @@ int main() {
         };
 		
 		// Cleanup Memory for the Next Neural Network Application
-		delete nn;
-		delete[] topology;
-		delete[] output;
-		output = nullptr;
-		topology = nullptr;
-		nn = nullptr;
+		if(nn != nullptr)
+		{
+			delete nn;
+			delete[] topology;
+			delete[] output;
+			output = nullptr;
+			topology = nullptr;
+			nn = nullptr;
+		}
 		
 		(input != 5) ? cout << "\n**************************\n" : cout << "\n";
     } while (running);
